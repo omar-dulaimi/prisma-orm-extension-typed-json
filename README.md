@@ -149,6 +149,11 @@ npx prisma db init
 there the client returns the narrowed types and stores whatever you write, and a missing registration
 surfaces as a clear error naming what is absent, not silent misbehaviour.
 
+For all of this inside a runnable app, see
+[prisma-orm-extension-typed-json-example](https://github.com/omar-dulaimi/prisma-orm-extension-typed-json-example):
+a small preferences service with a typed settings column, a literal-union status, a discriminated-union
+payload, an HTTP boundary that validates, and the psql experiment that shows where the type stops.
+
 ## Migrating from prisma-json-types-generator
 
 Prisma 8 has no generated client to patch and no generator hook, so the generator itself cannot run
