@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Compute and print the release decision, publish nothing - defaults on for safety'
+        type: boolean
+        default: true
+      fix_release:
+        description: 'Own-fix release: append the next .N counter to the already-published Prisma target version'
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Nothing is published unless the full suite, the packaged artefact and the live
+  # database check have all passed on this commit.
+  verify:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      # contents: write lets `gh release create` make the tag + release server-side.
+      contents: write
+      # Required. `npm publish` (npm >= 11.5) requests a GitHub OIDC token and exchanges it with npm
+      # for a short-lived publish credential; without this the exchange fails and there is no token to
+      # fall back on, because the package disallows them.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.33.2'
+
+      # Deliberately no `registry-url`: it writes an .npmrc containing an authToken placeholder, which
+      # gets in the way of the OIDC exchange below.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # scripts/release.mjs: version = the Prisma release this package targets, read from the
+      # @prisma/orm-target-postgres peer dependency. Releases happen when that version is not on npm
+      # yet (a Prisma bump just merged) or on a manual fix_release dispatch; every other run prints
+      # "nothing to release" and exits 0. No npm token anywhere: auth is the OIDC exchange alone.
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
+          FIX_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.fix_release && 'true' || 'false' }}
+        run: pnpm release

@@ -1,0 +1,27 @@
+{
+  "name": "prisma-orm-extension-typed-json-e2e-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A real Prisma 8 project used to prove the codecs work end to end, through both authoring doors. Not published.",
+  "scripts": {
+    "emit": "prisma contract emit",
+    "emit:psl": "prisma contract emit --config prisma.psl.config.ts",
+    "db:init": "prisma db init",
+    "db:init:psl": "prisma db init --config prisma.psl.config.ts",
+    "ensure:psl-db": "node ensure-psl-db.mjs",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "check": "tsx live-roundtrip.mts",
+    "check:psl": "DOOR=psl tsx live-roundtrip.mts"
+  },
+  "dependencies": {
+    "@prisma/cli-engine": "0.2.0",
+    "@prisma/orm-postgres": "8.0.0-rc.4",
+    "dotenv": "^17.0.0",
+    "pg": "8.22.0",
+    "prisma": "8.0.0-rc.7",
+    "prisma-orm-extension-typed-json": "link:../..",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3"
+  }
+}

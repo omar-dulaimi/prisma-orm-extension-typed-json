@@ -1,0 +1,90 @@
+{
+  "name": "prisma-orm-extension-typed-json",
+  "version": "0.0.0-managed",
+  "description": "Typed JSON and typed text columns for Prisma 8 with no validator dependency. The prisma-json-types-generator idea, as a Prisma 8 extension.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "dependencies": {
+    "@prisma/orm-family-sql": "8.0.0-rc.4",
+    "@prisma/orm-framework": "8.0.0-rc.4",
+    "@standard-schema/spec": "^1.1.0"
+  },
+  "peerDependencies": {
+    "@prisma/orm-target-postgres": "8.0.0-rc.4",
+    "typescript": ">=5.9"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@prisma/orm-target-postgres": "8.0.0-rc.4",
+    "@types/node": "22.19.0",
+    "tsdown": "0.22.8",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    "./codec-types": {
+      "types": "./dist/codec-types.d.mts",
+      "default": "./dist/codec-types.mjs"
+    },
+    "./codecs": {
+      "types": "./dist/codecs.d.mts",
+      "default": "./dist/codecs.mjs"
+    },
+    "./column-types": {
+      "types": "./dist/column-types.d.mts",
+      "default": "./dist/column-types.mjs"
+    },
+    "./control": {
+      "types": "./dist/control.d.mts",
+      "default": "./dist/control.mjs"
+    },
+    "./pack": {
+      "types": "./dist/pack.d.mts",
+      "default": "./dist/pack.mjs"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.mts",
+      "default": "./dist/runtime.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "release": "node scripts/release.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "verify:package": "node scripts/verify-package.mjs"
+  },
+  "author": "Omar Dulaimi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omar-dulaimi/prisma-orm-extension-typed-json.git"
+  },
+  "homepage": "https://github.com/omar-dulaimi/prisma-orm-extension-typed-json#readme",
+  "bugs": {
+    "url": "https://github.com/omar-dulaimi/prisma-orm-extension-typed-json/issues"
+  },
+  "keywords": [
+    "prisma",
+    "prisma-8",
+    "extension",
+    "typed-json",
+    "json",
+    "jsonb",
+    "typescript",
+    "postgres",
+    "prisma-json-types-generator"
+  ]
+}

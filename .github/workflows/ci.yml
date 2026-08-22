@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: '24.x'
+  PNPM_VERSION: '10.33.2'
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Verify the published entrypoints resolve
+        # Exercises the real tarball, not the source tree: an exports-map mistake is invisible
+        # until someone installs the package.
+        run: pnpm verify:package
+
+  e2e:
+    name: End-to-end against Postgres, both authoring doors
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: pg
+          POSTGRES_DB: pnzj
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:pg@localhost:5432/pnzj
+      DATABASE_URL_PSL: postgresql://postgres:pg@localhost:5432/pnzj_psl
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the package the fixture links to
+        run: pnpm build
+
+      - name: Install the fixture project
+        working-directory: e2e/fixture
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Emit both contracts (TypeScript builder and PSL)
+        working-directory: e2e/fixture
+        run: |
+          pnpm emit
+          pnpm emit:psl
+
+      - name: Assert both codecs reached both contract planes, type expressions intact
+        working-directory: e2e/fixture
+        run: |
+          node ../assert-contract.mjs src/prisma/contract.json Account
+          node ../assert-contract.mjs src/psl/contract.json Profile
+
+      - name: The emitted types are real (negative controls inside the file)
+        working-directory: e2e/fixture
+        run: pnpm typecheck
+
+      - name: Create the databases from the contracts
+        working-directory: e2e/fixture
+        run: |
+          pnpm ensure:psl-db
+          pnpm db:init
+          pnpm db:init:psl
+
+      - name: Values pass through untouched on real columns, both doors
+        working-directory: e2e/fixture
+        run: |
+          pnpm check
+          pnpm check:psl
+
+      - name: Negative control, the type proof must fail when a declared type is widened
+        working-directory: e2e/fixture
+        # A test that cannot fail proves nothing. Widening a literal union to `string` must break
+        # the typecheck step, because its @ts-expect-error directives become unused.
+        run: |
+          set -euo pipefail
+          sed -i "s/typedText<Status>(\"'draft' | 'published'\")/typedText<string>('string')/" src/prisma/contract.ts
+          pnpm emit >/dev/null
+          if pnpm typecheck >/dev/null 2>&1; then
+            echo "::error::The type proof passed with a widened type, so it is not testing what it claims."
+            exit 1
+          fi
+          echo "Negative control behaved correctly: the type proof fails when a type is widened."
+          git checkout -- src/prisma/contract.ts

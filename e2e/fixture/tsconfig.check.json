@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/prisma/contract.d.ts",
+    "src/psl/contract.d.ts",
+    "src/prisma/prisma-json.d.ts",
+    "typecheck-contract.ts"
+  ]
+}

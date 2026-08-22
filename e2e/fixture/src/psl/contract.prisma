@@ -1,0 +1,12 @@
+// The PSL door: no TypeScript contract builder, no validator library.
+types {
+  Settings = typed.Json("PrismaJson.Settings")
+  Status   = typed.Text("'draft' | 'published'")
+}
+
+model Profile {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  settings Settings
+  status   Status
+}
