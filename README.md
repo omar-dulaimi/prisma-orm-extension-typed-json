@@ -47,7 +47,7 @@ validates on write and read from a zod schema.
 ## 1. Install the package
 
 ```sh
-npm install prisma-orm-extension-typed-json @prisma/orm-postgres@8.0.0-rc.4 @prisma/cli-engine@0.2.0
+npm install prisma-orm-extension-typed-json @prisma/orm-postgres@8.0.0-rc.5 @prisma/cli-engine@0.2.0
 npm install -D prisma@next
 ```
 
@@ -181,8 +181,8 @@ reach for a validator codec instead.
 ## Versioning and status
 
 Versions mirror the Prisma release this package targets, the same convention Prisma's own extensions
-use: installing `prisma-orm-extension-typed-json@8.0.0-rc.4` gets you the build for Prisma `8.0.0-rc.4`.
-A fix released between Prisma versions appends a counter (`8.0.0-rc.4.1`), which semver orders after
+use: installing `prisma-orm-extension-typed-json@8.0.0-rc.5` gets you the build for Prisma `8.0.0-rc.5`.
+A fix released between Prisma versions appends a counter (`8.0.0-rc.5.1`), which semver orders after
 its base and before the next Prisma release.
 
 Early; tracks the Prisma v8 release-candidate line, which is still moving.
