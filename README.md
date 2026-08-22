@@ -36,6 +36,10 @@ The string is the TypeScript type expression, printed verbatim into the emitted 
 type parameter is the same type for the no-emit path. Keep the two in agreement; the package keeps the
 string safe (single line, balanced brackets, no stray `;`) and fails at the call site otherwise.
 
+The type applies on both sides of the client: `create` and `update` inputs for the column are checked
+against it, and rows come back narrowed to it. What never happens is a runtime check, so data that
+bypasses TypeScript (an old row, an `as never`, a raw SQL write) is stored and returned as-is.
+
 If you want the column validated at runtime as well, that is a different codec:
 [prisma-orm-extension-zod-json](https://github.com/omar-dulaimi/prisma-orm-extension-zod-json)
 validates on write and read from a zod schema.
@@ -43,12 +47,15 @@ validates on write and read from a zod schema.
 ## 1. Install the package
 
 ```sh
-npm install prisma-orm-extension-typed-json
+npm install prisma-orm-extension-typed-json @prisma/orm-postgres@8.0.0-rc.4 @prisma/cli-engine@0.2.0
+npm install -D prisma@next
 ```
 
-No validator library is pulled in. Your application needs `@prisma/orm-postgres@8.0.0-rc.4`; this
-package's version always matches the Prisma release it targets (see Versioning below), so keep the two
-aligned.
+No validator library is pulled in. `@prisma/orm-postgres` is the Prisma 8 facade your app talks to,
+`@prisma/cli-engine` provides `definePrismaConfig` for `prisma.config.ts` (it has to be a direct
+dependency for that import to resolve), and `prisma` is the unified CLI. This package's version
+always matches the Prisma release it targets (see Versioning below), so keep it aligned with
+`@prisma/orm-postgres`.
 
 ## 2. Register it in the config
 
